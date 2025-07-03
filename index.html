@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline Code Editor</title>
+    <style>
+        :root {
+            --background: #1e1e1e;
+            --foreground: #d4d4d4;
+            --panel-bg: #252526;
+            --border: #333333;
+            --primary: #0e639c;
+            --primary-hover: #1579ba;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            background-color: var(--background);
+            color: var(--foreground);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background-color: var(--panel-bg);
+            border-bottom: 1px solid var(--border);
+        }
+        header h1 {
+            font-size: 1.2rem;
+            margin: 0;
+        }
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        #run-button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        #run-button:hover {
+            background-color: var(--primary-hover);
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: calc(100vh - 50px);
+        }
+        .editor-panels, .result-panel {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .editor-panels {
+            display: grid;
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2px;
+            background-color: var(--border);
+        }
+        .code-area {
+            display: flex;
+            flex-direction: column;
+            background-color: var(--panel-bg);
+        }
+        label {
+            padding: 0.5rem;
+            font-weight: bold;
+            background-color: #333;
+        }
+        textarea {
+            flex-grow: 1;
+            width: 100%;
+            border: none;
+            background-color: #1e1e1e;
+            color: var(--foreground);
+            padding: 1rem;
+            font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+        }
+        textarea:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: -2px;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: white;
+        }
+        /* Responsive layout for smaller screens */
+        @media (max-width: 800px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+                overflow-y: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Offline Code Editor</h1>
+        <div class="controls">
+            <button id="run-button">▶ Run Code</button>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="editor-panels">
+            <div class="code-area">
+                <label for="html-code">HTML</label>
+                <textarea id="html-code" placeholder="Enter HTML here..."><!-- Example Code: Start -->
+<div class="container">
+  <h1>Test My Project</h1>
+  <p>This is my project output.</p>
+  <button id="my-button">Click Me</button>
+</div>
+<!-- Example Code: End --></textarea>
+            </div>
+            <div class="code-area">
+                <label for="css-code">CSS</label>
+                <textarea id="css-code" placeholder="Enter CSS here..."><!-- Example Code: Start -->
+body {
+  font-family: sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f0f0f0;
+}
+.container {
+  text-align: center;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  background-color: white;
+}
+button {
+  padding: 10px 15px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+<!-- Example Code: End --></textarea>
+            </div>
+            <div class="code-area">
+                <label for="js-code">JavaScript</label>
+                <textarea id="js-code" placeholder="Enter JavaScript here..."><!-- Example Code: Start -->
+const button = document.getElementById('my-button');
+button.addEventListener('click', () => {
+  alert('JavaScript is working!');
+  document.querySelector('.container').style.backgroundColor = '#e0f7fa';
+});
+// Example Code: End --></textarea>
+            </div>
+        </div>
+        <div class="result-panel">
+            <iframe id="result-frame" title="Output"></iframe>
+        </div>
+    </main>
+
+    <script>
+        const htmlCode = document.getElementById('html-code');
+        const cssCode = document.getElementById('css-code');
+        const jsCode = document.getElementById('js-code');
+        const resultFrame = document.getElementById('result-frame');
+        const runButton = document.getElementById('run-button');
+
+        function runCode() {
+            const sourceCode = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        ${cssCode.value}
+                    </style>
+                </head>
+                <body>
+                    ${htmlCode.value}
+                    <script>
+                        ${jsCode.value}
+                    <\/script>
+                </body>
+                </html>
+            `;
+            
+            // Write the generated source code into the iframe
+            const iframeDoc = resultFrame.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(sourceCode);
+            iframeDoc.close();
+        }
+
+        // Add event listener to the run button
+        runButton.addEventListener('click', runCode);
+
+        // Run the code automatically on initial load
+        runCode();
+    </script>
+</body>
+</html>
